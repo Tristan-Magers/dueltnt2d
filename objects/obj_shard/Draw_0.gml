@@ -1,0 +1,1 @@
+draw_sprite_ext(spr_shard, shard_t, xpos, ypos, 2, 2, 0, c_white, 1 - (counter/15));
