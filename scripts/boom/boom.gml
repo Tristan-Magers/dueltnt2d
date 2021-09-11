@@ -101,10 +101,10 @@ function makeboom(btype, xp, yp){ 	//create explosion based on type
 			ypos : 0,
 			draw : true,
 			blaster : true,
-			r : 120,
-			rm : 110,
-			knock : 12,
-			breaker : 30,
+			r : 170,
+			rm : 170,
+			knock : 30,
+			breaker : 16,
 			res : -1,
 			counter : 0
 		}	
@@ -228,19 +228,19 @@ function bombtype() { //set entity properties based on type
 	}
 	
 	if (bt == 4) { //missile
-		size_x = 20;
-		size_y = 20;
+		size_x = 30;
+		size_y = 30;
 		
 		sticky = true;
 		bouncy = false;
 
 		w = 20;
 		
-		fuse = 3;
+		fuse = 13;
 		trigger = 1;
 		trig_switch_type = -1;
 		
-		mgravity = false;
+		mgravity = true;
 	}
 	
 	tset = true;	

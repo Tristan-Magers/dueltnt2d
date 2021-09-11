@@ -91,15 +91,17 @@ function mapshape() {
 		ds_grid_add(map,14,1,-99);
 		ds_grid_add(map,15,1,-99);
 		ds_grid_add(map,16,1,-99);
-	
-		//ds_grid_get(map,7,3).state = 99;
-		//ds_grid_get(map,8,3).state = 99;
-		//ds_grid_get(map,9,3).state = 99;	
 		
-		//ds_grid_add(map,1,2,-99);
-		//ds_grid_add(map,1,3,-99);
+		//ds_grid_add(map,2,2,-99);
+		//ds_grid_add(map,2,3,-99);
 		//ds_grid_add(map,3,2,-99);
 		//ds_grid_add(map,3,3,-99);
+		//ds_grid_add(map,13,2,-99);
+		//ds_grid_add(map,13,3,-99);
+		
+		//ds_grid_add(map,10,1,-99);
+		//ds_grid_add(map,10,2,-99);
+		//ds_grid_add(map,10,3,-99);
 	}
 	
 	if (map_shape == 1)	{

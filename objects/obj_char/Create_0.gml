@@ -8,11 +8,18 @@ getmap();
 //character
 physvar();
 
+test = "none";
+test2 = "none";
+test3 = "none";
+
 goal_x = 0;
 goal_y = 0;
 
+target_x = 0;
+target_y = 0;
+
 dummy = false;
-ai = true;
+ai = false;
 
 xpos= room_width/2;
 
@@ -35,8 +42,17 @@ jump_hold = 0;
 djump = 0;
 ang = 0;
 
+space_timer = 0;
+
 ammo = 2;
 reload = 0;
+charge = 0;
+charge_max = 22;
+charging = false;
+charged = false;
+trackbomb = undefined;
+
+track_vy = 0;
 
 shift = 0;
 

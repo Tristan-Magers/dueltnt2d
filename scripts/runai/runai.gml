@@ -30,13 +30,15 @@ function runai(){
 	goal_x = tar_x;
 	goal_y = tar_y;
 	
-	goal_x = mouse_x;
-	goal_y = mouse_y;
+	//goal_x = mouse_x;
+	//goal_y = mouse_y;
+	
+	test = "none";
 	
 	var unit_t = (goal_x - xpos) / abs(goal_x - xpos)
 	if (goal_x == xpos) unit_t = 1
 	
-	if (tar_dist < 30) goal_x -= unit_t * 20;
+	if (tar_dist < 90) goal_x += find_vul(tar_x) * 15;
 	
 	x_dist = abs(xpos - goal_x);
 	y_dist = abs(ypos - goal_y);
@@ -44,13 +46,16 @@ function runai(){
 	jtime = abs(10/0.8);
 	jdist = (jtime + 1) * 10/2;
 	
-	if(!check_ground_y(get_tile_x(goal_x))) go_to_safe(goal_x);
+	if(!check_ground_y(get_tile_x(goal_x))) {
+		go_to_safe(goal_x);
+		test = "safe";
+	}
 	
 	var tile_x = get_tile_x(goal_x);
 	var tile_x_m = get_tile_x(xpos);
 	
-	target_x = goal_x - (30 * unit_t);
-	target_y = goal_y + 30;
+	target_x = goal_x - (30 * find_vul(tar_x));
+	target_y = goal_y + 20;
 	
 	var safe = check_land();
 	
@@ -66,8 +71,8 @@ function runai(){
 			if (i > xa-1) i = 10000;
 			if (i < 1000) {
 				if(!check_ground_y(i)) {
-					goal_x = global.tile_size * (temp) + xa;
-					goal_y = global.tile_size * check_ground_max(temp) + ya - global.tile_size ;
+					//goal_x = global.tile_size * (temp) + xa;
+					//goal_y = global.tile_size * check_ground_max(temp) + ya - global.tile_size ;
 					gap = true;
 				}
 				else {
@@ -77,11 +82,16 @@ function runai(){
 			
 			if (i == tile_x) i = 10000;
 		}
-		if(temp != tile_x_m) {
+		if(temp != tile_x_m && gap && check_ground_y(temp)) {
 			goal_x =  global.tile_size * (temp) + xa;
 			goal_y = global.tile_size * check_ground_max(temp) + ya - global.tile_size ;
 		}
-		temper = unit_t;
+		if (gap) test = "gap";
+	}
+	
+	if(!check_ground_y(get_tile_x(goal_x))) {
+		go_to_safe(goal_x);
+		test = "safe";
 	}
 	
 	movement_select();
@@ -94,6 +104,9 @@ function movement_select() {
 	
 	var safemove = check_land();
 	
+	var land_x = safemove % ds_grid_width(map);
+	var goal_x_t = get_tile_x(goal_x);
+	
 	if (safemove > -1) safemove = true;
 	else safemove = false;
 	
@@ -102,49 +115,56 @@ function movement_select() {
 	
 	if(tile_x_m > -1 && tile_x_m < ds_grid_width(map) && tile_y_m > -1 && tile_y_m < ds_grid_height(map)) {
 		var tile = ds_grid_get(map,tile_x_m, tile_y_m);
-		if(tile != -99 && tile.h < 1 && tile.counter > 560) up_p = true;
+		if(tile != -99 && tile.h < 1 && tile.counter > 585) up_p = true;
 	}
 	
-	if(!(safe && !safemove) && (tar_dist > 30 || !safe)) {
-		if(x_dist > 5 && 12 < abs((xpos + vx*4) - goal_x)) {
+	if(!(safe && !safemove)) {
+		if(x_dist > 5 && 12 < abs((xpos + vx*4) - goal_x) && (tar_dist > 30 || !safemove) && !(land_x == goal_x_t && ground < 1)) {
 			if(xpos > goal_x) left_p = true;
 			else right_p = true;
-		}	
+		}
+		
+		if(tar_dist < 140 && tar_dist > 50 && (abs(xpos - goal_x) > 50 || ground > 0) && rmouse == 0) rmouse_p = true;
+		if(tar_dist < 51 && tar_dist > 10 && (ground > 0 || safemove) && space == 0) space_p = true;
+		if(tar_dist < 11 && down == 0 && !attacking) down_p = true;
+		
+		test2 = "move";
+		if !(tar_dist > 30) test2 = "dist";
+	}
+	else {
+		test2 = tar_dist;
+		if((!safe)) test2 = "not safe";
+		if((safe && !safemove)) test2 = "not safe move";
 	}
 	
 	//jump if wall
-    if(checkwall > 0 && vy > -1) up_p = true;
+    if(checkwall > 0 && vy > -1 && (ground > 0 || !safe)) up_p = true;
 	//stay jumping
-	if(up > 0 && vy < 0 && (goal_y < ypos || !safe)) up_p = true;
+	if(up > 0 && vy < 0 && (goal_y - 1000 < ypos || !safe || checkwall > 0)) up_p = true;
 	//jump if close
 	if(ground > 0 && y_dist < jdist && goal_y + 30 < ypos && (goal_x - xpos)/vx < jtime) up_p = true;	
-	
-	//if(tar_dist < 90 && tar_dist > 30 && rmouse == 0) rmouse_p = true;
-	//if(tar_dist < 25 && tar_dist > 10 && space == 0) space_p = true;
-	//if(tar_dist < 10 && down == 0) down_p = true;
-	
-	if(!safe && !(safemove && ground == 0) && vy > 2) up_p = true;
+		
+	if(!(safemove && ground == 0) && vy > 5) up_p = true;
+	if(attacking && !safemove && down == 0) down_p = true;
+	if(!attacking && !safemove && down == 0 && ground == 0 && vy > 5 && djump < 1) down_p = true;
 }
 
 function go_to_safe(t_x) {
-	var change = false;
 	var p_tile_x = get_tile_x(t_x);
+	var side_t = (t_x - xa)/global.tile_size - floor((t_x - xa)/global.tile_size)
+	var end_t = false;
+	test3 = side_t;
 	if (p_tile_x < xa) {
-		for (var i = p_tile_x; i < xa; ++i) {
-			if check_ground_y(i) {
-				goal_x = global.tile_size * i + xa;
-				i = 100000;	
-				change = true;
+		for (var i = 0; i < 30; ++i) {
+			if (p_tile_x + i < xa && check_ground_y(p_tile_x + i)) {
+				goal_x = global.tile_size * (p_tile_x + i) + xa;	
+				end_t = true;
 			}
-		}
-	}
-	if (!change) {
-		for (var i = xa-1; i > -1; --i) {
-			if check_ground_y(i) {
-				goal_x = global.tile_size * i + xa;
-				i = -100;	
-				change = true;
+			if ((!end_t || side_t > 0.5) && p_tile_x - i >= 0 && check_ground_y(p_tile_x - i)) {
+				goal_x = (global.tile_size * (p_tile_x - i)) + xa;
+				end_t = true;
 			}
+			if (end_t) i = 100000;
 		}
 	}
 }
@@ -172,6 +192,24 @@ function check_ground_y(t_x) {
 	}	
 	
 	return false;
+}
+
+function find_vul(t_x) {
+	var p_tile_x = get_tile_x(t_x);
+	var side_t = (t_x - xa)/global.tile_size - floor((t_x - xa)/global.tile_size)
+	var end_t = false;
+	if (p_tile_x < xa) {
+		for (var i = 0; i < 30; ++i) {
+			if (p_tile_x + i < xa && !check_ground_y(p_tile_x + i)) {
+				end_t = true;
+			}
+			if ((!end_t || side_t > 0.5) && p_tile_x - i >= 0 && !check_ground_y(p_tile_x - i)) {
+				return -1;
+				end_t = true;
+			}
+			if (end_t) return 1;;
+		}
+	}
 }
 
 function check_presses() {

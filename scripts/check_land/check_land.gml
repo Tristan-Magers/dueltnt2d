@@ -15,7 +15,7 @@ function check_land(){
 	var ph = 1 - (1/fric_air);
 	vx_t *= ph;
 	
-	for (var i = 0; i < 120; ++i) {
+	for (var i = 0; i < 200; ++i) {
 		var tile_t = tile_check_land(px_t + size_x/2,py_t + size_y/2);
 		if (tile_t > -1) return tile_t;
 		var tile_t = tile_check_land(px_t - size_x/2,py_t + size_y/2);

@@ -43,6 +43,8 @@ else {
 	hitting = false;	
 }
 
+if(!mgravity) g = 0;
+
 phy_obj(5,60);
 
 testx = xpos;

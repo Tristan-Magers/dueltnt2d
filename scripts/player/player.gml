@@ -83,27 +83,94 @@ function player(){
 	else fric_ground = 4;
 	
 	//attack states
-	if ((down == 2) && attacking) { //cancle down
+	if ((down == 2) && attacking && space == 0) { //cancle down
 		attacking = false;
 		can_attack = false;
-		if(vy > -12) vy = -12;
+		if(vy > -12) {	
+			vy = -12;
+		}
 		g = 0.8;
 		ground = 0;
 	}
 	
-	if (((down > 0 && ground < 1) || (down == 2 && ground > 0)) && !attacking && can_attack) { //start down
+	if (((down > 1 && ground < 1) || (down == 2 && ground > 0)) && !attacking && can_attack && space == 0) { //start down
 		attacking = true;	
 		can_attack = false;	
 		attack = 0;
-		if(vy > -11) vy = -11;
-		vx *= 1.1;
-		g = 1.5;
-		ground = 0;
 	}
 	
-	if (ground > 1 && vy < 1) {
+	//space attack
+	if(space_timer > 0) space_timer--;
+	
+	if (space == 2 && djump > 0 && !attacking && down == 0) {
+		if(vy > -3) bomb3();
+		else bomb4();
+		
+		djump=0;
+		ground = 0;
+		track_vy = vy;
+		vy = -4;		
+		angry = 12;
+		space_timer = 5;
+	}
+	
+	//charge
+	if (!charged && space > 0 && down > 0 && attack_time < 3 && (space == 2 || down == 2 || charge > 0)) {
+		charge++;
+		
+		//when to show
+		if(charge > 1) charging = true;
+		else charging = false;
+		
+		//end previous
+		if (charge == 1) {
+			if(space_timer > 0) {
+				instance_destroy(trackbomb);
+				vy = track_vy;
+				djump++;
+			}
+			
+			//can_attack = false;
+			//djump = 0;
+		}
+		
+		//during / ending
+		if(charge >= 1) {
+			attacking = false;
+		}
+		
+		//at max
+		if (charge > charge_max) {
+			charge = 0;
+			charged = true;
+			ammo = 1;
+		}
+	}
+	else {
+		charge = 0;
+		charging = false;
+	}
+	
+	//attack manage
+	if (attacking) {
+		attack_time++;
+		if(attack_time > 8) angry = 5;
+		
+		if(attack_time == 3) {
+			if(vy > -11) vy = -11;
+			vx *= 1.1;
+			g = 1.5;
+			ground = 0;	
+		}
+	}
+	else {
+		attack_time = 0;
+		attack = -1;
+	}
+	
+	if (ground > 1 && vy < 1 && (attack_time > 3 || attack_time < 1)) {
 		if (attacking) {
-			vy = ((attack_time - 8) * -0.62) - 5;
+			vy = ((attack_time - 11) * -0.62) - 5;
 			makeboom(100, xpos, ypos + 60);
 			makeboom(101, xpos, ypos - 10);
 			ground = 0;
@@ -116,26 +183,6 @@ function player(){
 		g = 0.8;
 	}
 	
-	if (attacking) {
-		attack_time++;
-		if(attack_time > 8) angry = 5;
-	}
-	else {
-		attack_time = 0;
-		attack = -1;	
-	}
-	
-	//space attack
-	if (space == 2 && djump > 0 && !attacking) {
-		if(vy > -3) bomb3();
-		else bomb4();
-		
-		djump=0;
-		ground = 0;
-		vy = -4;		
-		angry = 12;
-	}
-	
 	//physics
 	fric_air = 19;
 	phy_obj(fric_ground, fric_air);
@@ -146,11 +193,17 @@ function player(){
 	ang = arctan2(ydif, xdif);
 	
 	if((mouse_hold == 1 || lmouse == 2) && ammo > 0 && !attacking) {
-		if(shot_d = 0 || (shot_d_s = 0 && shot_t != 0)) bomb1();
+		if(shot_d = 0 || (shot_d_s = 0 && shot_t != 0)) {
+			if(!charged) bomb1();
+			else bomb5();
+		}
 		else mouse_hold = 1;
 	}
 	if((mouse_hold == 2 || rmouse == 2) && ammo > 0 && !attacking) {
-		if(shot_d = 0 || (shot_d_s = 0 && shot_t != 1)) bomb2();
+		if(shot_d = 0 || (shot_d_s = 0 && shot_t != 1)) {
+			if(!charged) bomb2();
+			else bomb5();
+		}
 		else mouse_hold = 2;
 	}
 	
@@ -280,6 +333,8 @@ function bomb1() { //bouncer
 		shot_d = 8;
 		shot_d_s = 4;
 		mouse_hold = 0;
+		
+		charged = false;
 }
 
 function bomb2() { //sticky
@@ -303,10 +358,13 @@ function bomb2() { //sticky
 		shot_d = 6;
 		shot_d_s = 4;
 		mouse_hold = 0;
+		
+		charged = false;
 }
 
-function bomb3() {
+function bomb3() { //strong boost
 		newbomb = instance_create_layer(0, 0, "game_layer", obj_bomb);
+		trackbomb = newbomb;
 		newbomb.xpos = xpos;
 		newbomb.ypos = ypos + 10;
 		
@@ -316,8 +374,9 @@ function bomb3() {
 		newbomb.bt = 2;	
 }
 
-function bomb4() {
+function bomb4() { //weak boost
 		newbomb = instance_create_layer(0, 0, "game_layer", obj_bomb);
+		trackbomb = newbomb;
 		newbomb.xpos = xpos;
 		newbomb.ypos = ypos + 10;
 		
@@ -332,7 +391,7 @@ function bomb5() {
 		newbomb.xpos = xpos;
 		newbomb.ypos = ypos - 10;
 		
-		pow = 24;
+		pow = 31;
 		
 		newbomb.vy = sin(ang) * pow;
 		newbomb.vx = cos(ang) * pow;	
@@ -340,8 +399,10 @@ function bomb5() {
 		newbomb.bt = 4;	
 		
 		ammo = 0;
-		reload = -10;
+		reload = 30;
 		
 		shot_d = 10;
 		mouse_hold = 0;
+		
+		charged = false;
 }
